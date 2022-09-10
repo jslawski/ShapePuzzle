@@ -1,6 +1,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using System.Linq;
 
 public class PlayerUnit : MonoBehaviour
 {
@@ -13,14 +14,14 @@ public class PlayerUnit : MonoBehaviour
     public int currentYIndex = 0;
 
     private GridMoveCommand currentCommand;
-    private Stack<GridMoveCommand> moveHistory;
+    private List<GridMoveCommand> moveHistory;
     
     private int maxMoves = 10;
 
     // Start is called before the first frame update
     void Start()
     {
-        this.moveHistory = new Stack<GridMoveCommand>();
+        this.moveHistory = new List<GridMoveCommand>();
         this.MovePlayer(this.currentXIndex, this.currentYIndex);
     }
 
@@ -33,10 +34,11 @@ public class PlayerUnit : MonoBehaviour
         {
             this.currentCommand.Execute();
 
-            //Only store the command if the move is valid (is still within bounds)
-            if (this.IsWithinBounds(this.currentCommand.newXIndex, this.currentCommand.newYIndex))                
+            //Only store the command if the move is valid (is still within bounds, is a new tile)
+            if (this.IsWithinBounds(this.currentCommand.newXIndex, this.currentCommand.newYIndex) &&
+                this.IsNewMove(this.currentCommand.newXIndex, this.currentCommand.newYIndex))                
             {
-                this.moveHistory.Push(this.currentCommand);
+                this.moveHistory.Add(this.currentCommand);
             }
         }
     }
@@ -65,8 +67,9 @@ public class PlayerUnit : MonoBehaviour
         }
         if (Input.GetKeyUp(KeyCode.Backspace) && this.moveHistory.Count > 0)
         {            
-            Command lastCommand = this.moveHistory.Pop();
+            Command lastCommand = this.moveHistory.Last();
             lastCommand.Undo();
+            this.moveHistory.RemoveAt(this.moveHistory.Count - 1);
         }
 
         return null;
@@ -78,10 +81,30 @@ public class PlayerUnit : MonoBehaviour
             yValue > 0 & yValue <= this.maxYIndex);
     }
 
-    public void MovePlayer(int xIndex, int yIndex)
+    private bool IsNewMove(int xValue, int yValue)
     {
-        //Do not move the player if it would put them "out of bounds"
-        if (this.IsWithinBounds(xIndex, yIndex) == false)
+        for (int i = 0; i < this.moveHistory.Count; i++)
+        {
+            if (xValue == moveHistory[i].newXIndex && yValue == moveHistory[i].newYIndex)
+            {
+                return false;
+            }
+        }
+
+        return true;
+    }
+
+    public void MovePlayer(int xIndex, int yIndex, bool isUndo = false)
+    {
+        //Do not move the player if it would put them "out of bounds"        
+        if (this.IsWithinBounds(xIndex, yIndex) == false )
+        {
+            return;
+        }
+
+        //Player cannot travel to tiles they've been to already
+        //UNLESS they are undoing a previous move
+        if (isUndo == false && this.IsNewMove(xIndex, yIndex) == false)
         {
             return;
         }
