@@ -5,24 +5,36 @@ using System.Linq;
 
 public class PlayerUnit : MonoBehaviour
 {
-    private float worldSpaceMoveIncrement = 1f;
+    private float worldSpaceMoveIncrement = 2f;
 
-    private int maxXIndex = 5;
-    private int maxYIndex = 5;
-
-    public int currentXIndex = 0;
-    public int currentYIndex = 0;
+    private float maxXPosition = 9;
+    private float maxYPosition = 9;
 
     private GridMoveCommand currentCommand;
     private List<GridMoveCommand> moveHistory;
     
     private int maxMoves = 10;
 
+    [HideInInspector]
+    public SpriteRenderer bgRenderer;
+    [HideInInspector]
+    public SpriteRenderer outlineRenderer;
+    [HideInInspector]
+    public SpriteRenderer fillRenderer;
+
+    private GameTile nextTile;
+
     // Start is called before the first frame update
     void Start()
     {
         this.moveHistory = new List<GridMoveCommand>();
-        this.MovePlayer(this.currentXIndex, this.currentYIndex);
+
+        SpriteRenderer[] spriteRenderers = GetComponentsInChildren<SpriteRenderer>();
+        this.bgRenderer = spriteRenderers[0];
+        this.outlineRenderer = spriteRenderers[1];
+        this.fillRenderer = spriteRenderers[2];
+
+        //this.MovePlayer(this.currentXIndex, this.currentYIndex);
     }
 
     // Update is called once per frame
@@ -34,9 +46,7 @@ public class PlayerUnit : MonoBehaviour
         {
             this.currentCommand.Execute();
 
-            //Only store the command if the move is valid (is still within bounds, is a new tile)
-            if (this.IsWithinBounds(this.currentCommand.newXIndex, this.currentCommand.newYIndex) &&
-                this.IsNewMove(this.currentCommand.newXIndex, this.currentCommand.newYIndex))                
+            if (this.IsValidMove(this.currentCommand.newXPosition, this.currentCommand.newYPosition))                
             {
                 this.moveHistory.Add(this.currentCommand);
             }
@@ -47,23 +57,23 @@ public class PlayerUnit : MonoBehaviour
     {
         if (Input.GetKeyUp(KeyCode.UpArrow))
         {
-            int newYIndex = this.currentYIndex + 1;
-            return new GridMoveCommand(this, this.currentXIndex, newYIndex);
+            float newYPosition = this.transform.position.y + this.worldSpaceMoveIncrement;
+            return new GridMoveCommand(this, this.transform.position.x, newYPosition);
         }
         if (Input.GetKeyUp(KeyCode.DownArrow))
         {
-            int newYIndex = this.currentYIndex - 1;
-            return new GridMoveCommand(this, this.currentXIndex, newYIndex);
+            float newYPosition = this.transform.position.y - this.worldSpaceMoveIncrement;
+            return new GridMoveCommand(this, this.transform.position.x, newYPosition);
         }
         if (Input.GetKeyUp(KeyCode.LeftArrow))
         {
-            int newXIndex = this.currentXIndex - 1;
-            return new GridMoveCommand(this, newXIndex, this.currentYIndex);
+            float newXPosition = this.transform.position.x - this.worldSpaceMoveIncrement;
+            return new GridMoveCommand(this, newXPosition, this.transform.position.y);
         }
         if (Input.GetKeyUp(KeyCode.RightArrow))
         {
-            int newXIndex = this.currentXIndex + 1;
-            return new GridMoveCommand(this, newXIndex, this.currentYIndex);
+            float newXPosition = this.transform.position.x + this.worldSpaceMoveIncrement;
+            return new GridMoveCommand(this, newXPosition, this.transform.position.y);
         }
         if (Input.GetKeyUp(KeyCode.Backspace) && this.moveHistory.Count > 0)
         {            
@@ -75,17 +85,26 @@ public class PlayerUnit : MonoBehaviour
         return null;
     }
 
-    private bool IsWithinBounds(int xValue, int yValue)
+    private bool IsValidMove(float xValue, float yValue)
     {
-        return (xValue > 0 && xValue <= this.maxXIndex &&
-            yValue > 0 & yValue <= this.maxYIndex);
+        return (this.IsWithinBounds(xValue, yValue) &&
+                this.IsNewMove(xValue, yValue) &&
+                this.SharesAttribute(xValue, yValue));
     }
 
-    private bool IsNewMove(int xValue, int yValue)
+    //Player can only travel within the bounds of the game board
+    private bool IsWithinBounds(float xValue, float yValue)
+    {
+        return (xValue > 0 && xValue <= this.maxXPosition &&
+            yValue > 0 & yValue <= this.maxYPosition);
+    }
+
+    //Player can only travel to a space they haven't traveled to before
+    private bool IsNewMove(float xValue, float yValue)
     {
         for (int i = 0; i < this.moveHistory.Count; i++)
         {
-            if (xValue == moveHistory[i].newXIndex && yValue == moveHistory[i].newYIndex)
+            if (xValue == moveHistory[i].newXPosition && yValue == moveHistory[i].newYPosition)
             {
                 return false;
             }
@@ -94,27 +113,49 @@ public class PlayerUnit : MonoBehaviour
         return true;
     }
 
-    public void MovePlayer(int xIndex, int yIndex, bool isUndo = false)
+    //Player can only travel to a square that shares at least
+    //one attribute with its current state
+    //Attributes: Shape, Fill Color, Outline Color, Background Color
+    private bool SharesAttribute(float xValue, float yValue)
+    {        
+        RaycastHit hit;
+        if (Physics.Raycast(new Vector3(xValue, yValue, 0.0f), Vector3.forward, out hit, Mathf.Infinity))
+        {
+            this.nextTile = hit.collider.gameObject.GetComponent<GameTile>();
+        }
+
+        return (this.nextTile.outlineRenderer.sprite.name == this.outlineRenderer.sprite.name ||
+                this.nextTile.bgRenderer.material.color == this.bgRenderer.material.color ||
+                this.nextTile.outlineRenderer.material.color == this.outlineRenderer.material.color ||
+                this.nextTile.fillRenderer.material.color == this.fillRenderer.material.color);
+    }
+
+    public void MovePlayer(float xPosition, float yPosition, bool isUndo = false)
     {
+        Debug.LogError("Movin' to: (" + xPosition + ", " + yPosition + ")");
+        
         //Do not move the player if it would put them "out of bounds"        
-        if (this.IsWithinBounds(xIndex, yIndex) == false )
+        if (this.IsWithinBounds(xPosition, yPosition) == false ||
+            this.SharesAttribute(xPosition, yPosition) == false)
         {
             return;
         }
 
         //Player cannot travel to tiles they've been to already
         //UNLESS they are undoing a previous move
-        if (isUndo == false && this.IsNewMove(xIndex, yIndex) == false)
+        if (isUndo == false && this.IsNewMove(xPosition, yPosition) == false)
         {
             return;
         }
 
-        this.currentXIndex = xIndex;
-        this.currentYIndex = yIndex;
+        this.transform.position = new Vector3(xPosition, yPosition, -0.5f);
+    }
 
-        float xIncrement = this.currentXIndex * this.worldSpaceMoveIncrement;
-        float yIncrement = this.currentYIndex * this.worldSpaceMoveIncrement;
-
-        this.transform.position = new Vector3(xIncrement, yIncrement, 0.0f);
+    private void OnTriggerEnter(Collider other)
+    {
+        if (other.tag == "Tile")
+        { 
+        //Update Player Attributes
+        }
     }
 }
