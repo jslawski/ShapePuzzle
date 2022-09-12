@@ -3,8 +3,7 @@ using System.Collections.Generic;
 using UnityEngine;
 
 public class GoalTile : GameTile
-{
-    
+{    
     private GameObject victoryCanvas;
 
     protected override void Start()
@@ -19,6 +18,8 @@ public class GoalTile : GameTile
         //Do victory logic here
         this.victoryCanvas.SetActive(true);
         player.levelFinished = true;
+
+        this.victoryCanvas.GetComponent<VictoryScreen>().SetupVictoryScreenTile(this);
 
         base.TraverseTile(player);
     }

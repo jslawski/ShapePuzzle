@@ -93,7 +93,10 @@ public class PlayerUnit : MonoBehaviour
 
         if (Input.GetKeyUp(KeyCode.Space) && this.levelFinished == true)
         {
-            SceneManager.LoadScene(0);
+            if (SceneManager.GetActiveScene().buildIndex < 2)
+            {
+                SceneManager.LoadScene(SceneManager.GetActiveScene().buildIndex + 1);
+            }
         }
         if (Input.GetKeyUp(KeyCode.Escape))
         {
