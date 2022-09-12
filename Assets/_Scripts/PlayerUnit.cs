@@ -23,6 +23,9 @@ public class PlayerUnit : MonoBehaviour
     //but the functionality is still there, if needed
     private int maxMoves = 100;
 
+    [SerializeField]
+    private GameObject shapeParent;
+
     [HideInInspector]
     public SpriteRenderer bgRenderer;
     [HideInInspector]
@@ -32,7 +35,9 @@ public class PlayerUnit : MonoBehaviour
 
     private GameTile nextTile;
 
+    [HideInInspector]
     public bool undidLastMove = false;
+    [HideInInspector]
     public bool levelFinished = false;
 
     private Animator playerAnimator;
@@ -49,11 +54,25 @@ public class PlayerUnit : MonoBehaviour
 
         this.playerMoveSound = GetComponent<AudioSource>();
         this.playerAnimator = GetComponent<Animator>();
+
+        StartCoroutine(this.DisplayPlayer());
+    }
+
+    private IEnumerator DisplayPlayer()
+    {
+        yield return new WaitForSeconds(1.0f);
+
+        this.shapeParent.SetActive(true);
     }
 
     // Update is called once per frame
     void Update()
     {
+        if (this.bgRenderer.gameObject.activeSelf == false)
+        {
+            return;
+        }
+        
         this.currentCommand = this.HandleInput();
 
         if (this.currentCommand != null && this.moveHistory.Count < this.maxMoves)

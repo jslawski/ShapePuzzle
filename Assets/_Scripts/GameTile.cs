@@ -15,6 +15,8 @@ public class GameTile : MonoBehaviour
 
     public bool traversed = false;
 
+    private Animator tileAnimator;
+
     // Start is called before the first frame update
     protected virtual void Start()
     {
@@ -23,6 +25,19 @@ public class GameTile : MonoBehaviour
         this.outlineRenderer = spriteRenderers[1];
         this.fillRenderer = spriteRenderers[2];
         this.markedRenderer = spriteRenderers[3];
+
+        this.tileAnimator = GetComponent<Animator>();
+
+        StartCoroutine(this.LoadTile());
+    }
+
+    private IEnumerator LoadTile()
+    {
+        float loadDelay = Random.Range(0.0f, 0.5f);
+
+        yield return new WaitForSeconds(loadDelay);
+
+        this.tileAnimator.SetTrigger("LoadTileTrigger");
     }
 
     public virtual void TraverseTile(PlayerUnit player)

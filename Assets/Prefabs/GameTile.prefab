@@ -263,6 +263,7 @@ GameObject:
   - component: {fileID: 2166999497847073252}
   - component: {fileID: 2259031017210961311}
   - component: {fileID: 1223666483390764731}
+  - component: {fileID: 7994714876529596125}
   m_Layer: 0
   m_Name: GameTile
   m_TagString: tile
@@ -315,6 +316,26 @@ MonoBehaviour:
   outlineRenderer: {fileID: 0}
   fillRenderer: {fileID: 0}
   traversed: 0
+--- !u!95 &7994714876529596125
+Animator:
+  serializedVersion: 4
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 4694763374747615275}
+  m_Enabled: 1
+  m_Avatar: {fileID: 0}
+  m_Controller: {fileID: 9100000, guid: 8f43ec6d02d8233499567dc1cc14274d, type: 2}
+  m_CullingMode: 0
+  m_UpdateMode: 0
+  m_ApplyRootMotion: 0
+  m_LinearVelocityBlending: 0
+  m_StabilizeFeet: 0
+  m_WarningMessage: 
+  m_HasTransformHierarchy: 1
+  m_AllowConstantClipSamplingOptimization: 1
+  m_KeepAnimatorControllerStateOnDisable: 0
 --- !u!1 &6199641022996776737
 GameObject:
   m_ObjectHideFlags: 0
