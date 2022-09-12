@@ -13,7 +13,10 @@ public class PlayerUnit : MonoBehaviour
 
     private GridMoveCommand currentCommand;
     private List<GridMoveCommand> moveHistory;
-    
+
+    private AudioSource playerMoveSound;
+    private float pitchIncrement = 0.1f;
+
     //Max moves was originally part of the design,
     //but after playtesting it felt like an unnecessary limitation
     //Upped it to an arbitrarily large number so that it never triggers anything,
@@ -32,6 +35,8 @@ public class PlayerUnit : MonoBehaviour
     public bool undidLastMove = false;
     public bool levelFinished = false;
 
+    private Animator playerAnimator;
+
     // Start is called before the first frame update
     void Start()
     {
@@ -41,6 +46,9 @@ public class PlayerUnit : MonoBehaviour
         this.bgRenderer = spriteRenderers[0];
         this.outlineRenderer = spriteRenderers[1];
         this.fillRenderer = spriteRenderers[2];
+
+        this.playerMoveSound = GetComponent<AudioSource>();
+        this.playerAnimator = GetComponent<Animator>();
     }
 
     // Update is called once per frame
@@ -152,6 +160,13 @@ public class PlayerUnit : MonoBehaviour
             return false;
         }
 
+        //Special case, prevents player from moving back to starting tile
+        //without using Undo
+        if (this.nextTile.traversed == true)
+        {
+            return false;
+        }
+
         int attributeScore = 0;
 
         if (this.nextTile.fillRenderer.sprite.name == this.fillRenderer.sprite.name)
@@ -168,13 +183,15 @@ public class PlayerUnit : MonoBehaviour
         }
 
         return (attributeScore > 1);
-        
-        /*
-        return (this.nextTile.outlineRenderer.sprite.name == this.outlineRenderer.sprite.name ||
-                this.nextTile.bgRenderer.material.color == this.bgRenderer.material.color ||
-                this.nextTile.outlineRenderer.material.color == this.outlineRenderer.material.color ||
-                this.nextTile.fillRenderer.material.color == this.fillRenderer.material.color);
-        */
+    }
+
+    private void IndicateInvalidMove()
+    {
+        this.playerMoveSound.clip = Resources.Load<AudioClip>("Audio/InvalidMove");
+        this.playerMoveSound.pitch = 1;
+        this.playerMoveSound.Play();
+
+        this.playerAnimator.SetTrigger("InvalidMoveTrigger");
     }
 
     public void MovePlayer(float xPosition, float yPosition, bool isUndo = false)
@@ -182,6 +199,7 @@ public class PlayerUnit : MonoBehaviour
         //Do not move the player if it would put them "out of bounds"        
         if (this.IsWithinBounds(xPosition, yPosition) == false)
         {
+            this.IndicateInvalidMove();
             return;
         }
 
@@ -193,11 +211,15 @@ public class PlayerUnit : MonoBehaviour
             if (this.IsNewMove(xPosition, yPosition) == false || 
                 this.SharesAttribute(xPosition, yPosition) == false)
             {
+                this.IndicateInvalidMove();
                 return;
             }                
         }
 
         this.transform.position = new Vector3(xPosition, yPosition, -0.5f);
+        this.playerMoveSound.clip = Resources.Load<AudioClip>("Audio/PlayerMove");
+        this.playerMoveSound.pitch = (1 + (this.pitchIncrement * this.moveHistory.Count));
+        this.playerMoveSound.Play();
     }
 
     private void UpdatePlayerAttributes(GameTile newTile)

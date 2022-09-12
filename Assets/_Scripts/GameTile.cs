@@ -13,6 +13,8 @@ public class GameTile : MonoBehaviour
     
     private SpriteRenderer markedRenderer;
 
+    public bool traversed = false;
+
     // Start is called before the first frame update
     protected virtual void Start()
     {
@@ -25,11 +27,13 @@ public class GameTile : MonoBehaviour
 
     public virtual void TraverseTile(PlayerUnit player)
     {
+        this.traversed = true;
         this.markedRenderer.enabled = true;
     }
 
     public void ResetTraverseState()
     {
+        this.traversed = false;
         this.markedRenderer.enabled = false;
     }
 }
