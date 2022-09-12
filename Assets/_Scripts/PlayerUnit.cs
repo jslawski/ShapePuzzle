@@ -14,7 +14,11 @@ public class PlayerUnit : MonoBehaviour
     private GridMoveCommand currentCommand;
     private List<GridMoveCommand> moveHistory;
     
-    private int maxMoves = 10;
+    //Max moves was originally part of the design,
+    //but after playtesting it felt like an unnecessary limitation
+    //Upped it to an arbitrarily large number so that it never triggers anything,
+    //but the functionality is still there, if needed
+    private int maxMoves = 100;
 
     [HideInInspector]
     public SpriteRenderer bgRenderer;
