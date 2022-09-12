@@ -117,11 +117,18 @@ public class PlayerUnit : MonoBehaviour
     //one attribute with its current state
     //Attributes: Shape, Fill Color, Outline Color, Background Color
     private bool SharesAttribute(float xValue, float yValue)
-    {        
+    {
+        this.nextTile = null;
+        
         RaycastHit hit;
-        if (Physics.Raycast(new Vector3(xValue, yValue, 0.0f), Vector3.forward, out hit, Mathf.Infinity))
+        if (Physics.Raycast(new Vector3(xValue, yValue, -10.0f), Vector3.forward, out hit, Mathf.Infinity))
         {
             this.nextTile = hit.collider.gameObject.GetComponent<GameTile>();
+        }
+        
+        if (this.nextTile == null)
+        { 
+            return false;
         }
 
         return (this.nextTile.outlineRenderer.sprite.name == this.outlineRenderer.sprite.name ||
@@ -135,17 +142,21 @@ public class PlayerUnit : MonoBehaviour
         Debug.LogError("Movin' to: (" + xPosition + ", " + yPosition + ")");
         
         //Do not move the player if it would put them "out of bounds"        
-        if (this.IsWithinBounds(xPosition, yPosition) == false ||
-            this.SharesAttribute(xPosition, yPosition) == false)
+        if (this.IsWithinBounds(xPosition, yPosition) == false)
         {
             return;
         }
 
         //Player cannot travel to tiles they've been to already
+        //or tiles that don't share an attribute with their current game piece
         //UNLESS they are undoing a previous move
-        if (isUndo == false && this.IsNewMove(xPosition, yPosition) == false)
+        if (isUndo == false)
         {
-            return;
+            if (this.IsNewMove(xPosition, yPosition) == false || 
+                this.SharesAttribute(xPosition, yPosition) == false)
+            {
+                return;
+            }                
         }
 
         this.transform.position = new Vector3(xPosition, yPosition, -0.5f);
@@ -156,6 +167,7 @@ public class PlayerUnit : MonoBehaviour
         if (other.tag == "Tile")
         { 
         //Update Player Attributes
+        //Update tile "marked" status
         }
     }
 }
