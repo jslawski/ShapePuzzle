@@ -26,11 +26,15 @@ public class GridMoveCommand : Command
         this.prevXPosition = this.playerUnit.transform.position.x;
         this.prevYPosition = this.playerUnit.transform.position.y;
 
+        this.playerUnit.undidLastMove = false;
+
         this.playerUnit.MovePlayer(this.newXPosition, this.newYPosition, false);
     }
 
     public override void Undo()
     {
+        this.playerUnit.undidLastMove = true;
+
         this.playerUnit.MovePlayer(this.prevXPosition, this.prevYPosition, true);
     }
 }

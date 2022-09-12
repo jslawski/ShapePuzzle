@@ -4,10 +4,10 @@ using UnityEngine;
 
 public class GoalTile : GameTile
 {
-    public override void TriggerPlayerInteraction()
+    public override void TraverseTile()
     {
         //Do victory logic here
         
-        base.TriggerPlayerInteraction();
+        base.TraverseTile();
     }
 }

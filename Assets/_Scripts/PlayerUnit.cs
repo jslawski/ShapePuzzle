@@ -24,6 +24,8 @@ public class PlayerUnit : MonoBehaviour
 
     private GameTile nextTile;
 
+    public bool undidLastMove = false;
+
     // Start is called before the first frame update
     void Start()
     {
@@ -138,9 +140,7 @@ public class PlayerUnit : MonoBehaviour
     }
 
     public void MovePlayer(float xPosition, float yPosition, bool isUndo = false)
-    {
-        Debug.LogError("Movin' to: (" + xPosition + ", " + yPosition + ")");
-        
+    {        
         //Do not move the player if it would put them "out of bounds"        
         if (this.IsWithinBounds(xPosition, yPosition) == false)
         {
@@ -162,12 +162,37 @@ public class PlayerUnit : MonoBehaviour
         this.transform.position = new Vector3(xPosition, yPosition, -0.5f);
     }
 
+    private void UpdatePlayerAttributes(GameTile newTile)
+    {        
+        this.bgRenderer.material.color = newTile.bgRenderer.material.color;
+
+        this.outlineRenderer.material.color = newTile.outlineRenderer.material.color;
+        this.outlineRenderer.sprite = newTile.outlineRenderer.sprite;
+
+        this.fillRenderer.material.color = newTile.fillRenderer.material.color;
+        this.fillRenderer.sprite = newTile.fillRenderer.sprite;
+    }
+
     private void OnTriggerEnter(Collider other)
     {
-        if (other.tag == "Tile")
-        { 
-        //Update Player Attributes
-        //Update tile "marked" status
+        if (other.tag == "tile")
+        {
+            //Update Player Attributes
+            GameTile collidedTile = other.GetComponent<GameTile>();
+
+
+            this.UpdatePlayerAttributes(collidedTile);
+            collidedTile.TraverseTile();
+        }
+    }
+
+    //Special case, to reset the "traversed" state of the most
+    //recent game tile on an Undo
+    private void OnTriggerExit(Collider other)
+    {
+        if (other.tag == "tile" && this.undidLastMove == true)
+        {
+            other.GetComponent<GameTile>().ResetTraverseState();
         }
     }
 }
