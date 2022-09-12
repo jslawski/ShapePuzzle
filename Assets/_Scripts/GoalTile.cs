@@ -4,10 +4,22 @@ using UnityEngine;
 
 public class GoalTile : GameTile
 {
-    public override void TraverseTile()
+    
+    private GameObject victoryCanvas;
+
+    protected override void Start()
+    {
+        this.victoryCanvas = GetComponentInChildren<Canvas>(true).gameObject;
+        
+        base.Start();
+    }
+
+    public override void TraverseTile(PlayerUnit player)
     {
         //Do victory logic here
-        
-        base.TraverseTile();
+        this.victoryCanvas.SetActive(true);
+        player.levelFinished = true;
+
+        base.TraverseTile(player);
     }
 }

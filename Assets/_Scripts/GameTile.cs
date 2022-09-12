@@ -12,10 +12,9 @@ public class GameTile : MonoBehaviour
     public SpriteRenderer fillRenderer;
     
     private SpriteRenderer markedRenderer;
-    private bool traversed = false;
 
     // Start is called before the first frame update
-    void Start()
+    protected virtual void Start()
     {
         SpriteRenderer[] spriteRenderers = GetComponentsInChildren<SpriteRenderer>(true);
         this.bgRenderer = spriteRenderers[0];        
@@ -24,15 +23,13 @@ public class GameTile : MonoBehaviour
         this.markedRenderer = spriteRenderers[3];
     }
 
-    public virtual void TraverseTile()
+    public virtual void TraverseTile(PlayerUnit player)
     {
-        this.traversed = true;
         this.markedRenderer.enabled = true;
     }
 
     public void ResetTraverseState()
     {
-        this.traversed = false;
         this.markedRenderer.enabled = false;
     }
 }

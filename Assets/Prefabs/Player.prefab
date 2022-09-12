@@ -136,6 +136,7 @@ MonoBehaviour:
   outlineRenderer: {fileID: 0}
   fillRenderer: {fileID: 0}
   undidLastMove: 0
+  levelFinished: 0
 --- !u!65 &3246156465208723898
 BoxCollider:
   m_ObjectHideFlags: 0
@@ -382,7 +383,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!4 &2057919996023204026
 Transform:
   m_ObjectHideFlags: 0

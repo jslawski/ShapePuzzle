@@ -2,6 +2,7 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using System.Linq;
+using UnityEngine.SceneManagement;
 
 public class PlayerUnit : MonoBehaviour
 {
@@ -25,18 +26,17 @@ public class PlayerUnit : MonoBehaviour
     private GameTile nextTile;
 
     public bool undidLastMove = false;
+    public bool levelFinished = false;
 
     // Start is called before the first frame update
     void Start()
     {
         this.moveHistory = new List<GridMoveCommand>();
 
-        SpriteRenderer[] spriteRenderers = GetComponentsInChildren<SpriteRenderer>();
+        SpriteRenderer[] spriteRenderers = GetComponentsInChildren<SpriteRenderer>(true);
         this.bgRenderer = spriteRenderers[0];
         this.outlineRenderer = spriteRenderers[1];
         this.fillRenderer = spriteRenderers[2];
-
-        //this.MovePlayer(this.currentXIndex, this.currentYIndex);
     }
 
     // Update is called once per frame
@@ -57,31 +57,43 @@ public class PlayerUnit : MonoBehaviour
 
     GridMoveCommand HandleInput()
     {
-        if (Input.GetKeyUp(KeyCode.UpArrow))
+        if (this.levelFinished == false)
         {
-            float newYPosition = this.transform.position.y + this.worldSpaceMoveIncrement;
-            return new GridMoveCommand(this, this.transform.position.x, newYPosition);
+            if (Input.GetKeyUp(KeyCode.UpArrow))
+            {
+                float newYPosition = this.transform.position.y + this.worldSpaceMoveIncrement;
+                return new GridMoveCommand(this, this.transform.position.x, newYPosition);
+            }
+            if (Input.GetKeyUp(KeyCode.DownArrow))
+            {
+                float newYPosition = this.transform.position.y - this.worldSpaceMoveIncrement;
+                return new GridMoveCommand(this, this.transform.position.x, newYPosition);
+            }
+            if (Input.GetKeyUp(KeyCode.LeftArrow))
+            {
+                float newXPosition = this.transform.position.x - this.worldSpaceMoveIncrement;
+                return new GridMoveCommand(this, newXPosition, this.transform.position.y);
+            }
+            if (Input.GetKeyUp(KeyCode.RightArrow))
+            {
+                float newXPosition = this.transform.position.x + this.worldSpaceMoveIncrement;
+                return new GridMoveCommand(this, newXPosition, this.transform.position.y);
+            }
+            if (Input.GetKeyUp(KeyCode.Backspace) && this.moveHistory.Count > 0)
+            {
+                Command lastCommand = this.moveHistory.Last();
+                lastCommand.Undo();
+                this.moveHistory.RemoveAt(this.moveHistory.Count - 1);
+            }
         }
-        if (Input.GetKeyUp(KeyCode.DownArrow))
+
+        if (Input.GetKeyUp(KeyCode.Space) && this.levelFinished == true)
         {
-            float newYPosition = this.transform.position.y - this.worldSpaceMoveIncrement;
-            return new GridMoveCommand(this, this.transform.position.x, newYPosition);
+            SceneManager.LoadScene(0);
         }
-        if (Input.GetKeyUp(KeyCode.LeftArrow))
+        if (Input.GetKeyUp(KeyCode.Escape))
         {
-            float newXPosition = this.transform.position.x - this.worldSpaceMoveIncrement;
-            return new GridMoveCommand(this, newXPosition, this.transform.position.y);
-        }
-        if (Input.GetKeyUp(KeyCode.RightArrow))
-        {
-            float newXPosition = this.transform.position.x + this.worldSpaceMoveIncrement;
-            return new GridMoveCommand(this, newXPosition, this.transform.position.y);
-        }
-        if (Input.GetKeyUp(KeyCode.Backspace) && this.moveHistory.Count > 0)
-        {            
-            Command lastCommand = this.moveHistory.Last();
-            lastCommand.Undo();
-            this.moveHistory.RemoveAt(this.moveHistory.Count - 1);
+            Application.Quit();
         }
 
         return null;
@@ -133,10 +145,29 @@ public class PlayerUnit : MonoBehaviour
             return false;
         }
 
+        int attributeScore = 0;
+
+        if (this.nextTile.fillRenderer.sprite.name == this.fillRenderer.sprite.name)
+        {
+            attributeScore++;
+        }
+        if (this.nextTile.bgRenderer.material.color == this.bgRenderer.material.color)
+        {
+            attributeScore++;
+        }
+        if (this.nextTile.fillRenderer.material.color == this.fillRenderer.material.color)
+        {
+            attributeScore++;
+        }
+
+        return (attributeScore > 1);
+        
+        /*
         return (this.nextTile.outlineRenderer.sprite.name == this.outlineRenderer.sprite.name ||
                 this.nextTile.bgRenderer.material.color == this.bgRenderer.material.color ||
                 this.nextTile.outlineRenderer.material.color == this.outlineRenderer.material.color ||
                 this.nextTile.fillRenderer.material.color == this.fillRenderer.material.color);
+        */
     }
 
     public void MovePlayer(float xPosition, float yPosition, bool isUndo = false)
@@ -182,7 +213,7 @@ public class PlayerUnit : MonoBehaviour
 
 
             this.UpdatePlayerAttributes(collidedTile);
-            collidedTile.TraverseTile();
+            collidedTile.TraverseTile(this);
         }
     }
 
