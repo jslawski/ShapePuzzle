@@ -220,6 +220,8 @@ public class PlayerUnit : MonoBehaviour
         this.playerMoveSound.clip = Resources.Load<AudioClip>("Audio/PlayerMove");
         this.playerMoveSound.pitch = (1 + (this.pitchIncrement * this.moveHistory.Count));
         this.playerMoveSound.Play();
+
+        this.playerAnimator.SetTrigger("PlayerMoveTrigger");
     }
 
     private void UpdatePlayerAttributes(GameTile newTile)
